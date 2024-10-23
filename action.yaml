@@ -195,12 +195,16 @@ runs:
             ')' \
             -print0)
 
+        perm_executable="/111"
+        # BSD find on macOS does not support the slash syntax for permissions.
+        [ "$(uname -s)" = "Darwin" ] && perm_executable="+111"
+
         while IFS= read -r -d '' file; do
           head -n1 "$file" | grep -Eqs "$shebangregex" || continue
           filepaths+=("$file")
         done < <(find "${INPUT_SCANDIR}" \
             ${INPUT_EXCLUDE_ARGS} \
-            -type f ! -name '*.*' -perm /111 \
+            -type f ! -name '*.*' -perm "$perm_executable" \
             -print0)
 
         if [[ -n "${INPUT_CHECK_TOGETHER}" ]]; then
