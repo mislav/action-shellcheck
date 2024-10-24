@@ -46,10 +46,10 @@ inputs:
     default: "stable"
 outputs:
   files:
-    description: A list of files with issues
+    description: The list of files checked
     value: ${{ steps.check.outputs.filepaths }}
   options:
-    description: The options used
+    description: Shellcheck options used
     value: ${{ steps.options.outputs.options }}
 branding:
   icon: "terminal"
