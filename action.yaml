@@ -6,6 +6,10 @@ inputs:
     description: "A space separated list of additional filename to check"
     required: false
     default: ""
+  all_scripts:
+    description: "Set to true to check all executable scripts. The default is to check only ones with known shebangs"
+    required: false
+    default: ""
   ignore:
     description: "Paths to ignore when running ShellCheck"
     required: false
@@ -147,6 +151,7 @@ runs:
       shell: bash
       id: check
       env:
+        INPUT_ALL_SCRIPTS: ${{ inputs.all_scripts }}
         INPUT_SCANDIR: ${{ inputs.scandir }}
         INPUT_CHECK_TOGETHER: ${{ inputs.check_together }}
         INPUT_EXCLUDE_ARGS: ${{ steps.exclude.outputs.excludes }}
@@ -155,7 +160,8 @@ runs:
       run: |
         statuscode=0
         declare -a filepaths
-        shebangregex="^#! */[^ ]*/(env *)?[abk]*sh"
+        shebangregex="^#!"
+        [ "$INPUT_ALL_SCRIPTS" = "true" ] || shebangregex="^#! */[^ ]*/(env *)?[abk]*sh"
 
         set -f # temporarily disable globbing so that globs in inputs aren't expanded
 

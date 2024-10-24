@@ -61,3 +61,19 @@ jobs:
           echo "::error:: Expected file $notexpect found in ${{ steps.two.outputs.files }}"
           exit 1
         fi
+
+    - name: Run ShellCheck
+      uses: ./
+      id: three
+      with:
+        scandir: './testfiles/scandir'
+        all_scripts: true
+
+    - name: Verify check
+      run: |
+        expect="testfiles/scandir/unknown-shebang"
+
+        if [[ ! "${{ steps.two.outputs.files }}" =~ $expect ]];then
+          echo "::error:: Expected file $expect not found in ${{ steps.two.outputs.files }}"
+          exit 1
+        fi
