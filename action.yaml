@@ -41,7 +41,7 @@ inputs:
     required: false
     default: "gcc"
   version:
-    description: "Specify a concrete version of ShellCheck to use"
+    description: "The version of ShellCheck to download. Set to 'system' to use pre-installed shellcheck."
     required: false
     default: "stable"
 outputs:
@@ -61,26 +61,30 @@ runs:
       shell: bash
       env:
         INPUT_VERSION: ${{ inputs.version }}
+        OS_NAME: ${{ runner.os }}
       run: |
-        if [[ "${{ runner.os }}" == "macOS" ]]; then
-          osvariant="darwin"
-        else
-          osvariant="linux"
+        if [ "${INPUT_VERSION}" = "system" ]; then
+          echo "Using system shellcheck: $(command -v shellcheck)"
+          exit 0
         fi
 
-        baseurl="https://github.com/koalaman/shellcheck/releases/download"
+        if [ "${OS_NAME}" = "macOS" ]; then
+          osvariant="darwin"
+          download_dir="$(mktemp -d -t shellcheck)"
+        else
+          osvariant="linux"
+          download_dir="$(mktemp -d --tmpdir shellcheck.XXX)"
+        fi
 
-        curl -Lso "${{ github.action_path }}/sc.tar.xz" \
-          "${baseurl}/${INPUT_VERSION}/shellcheck-${INPUT_VERSION}.${osvariant}.x86_64.tar.xz"
+        curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/${INPUT_VERSION}/shellcheck-${INPUT_VERSION}.${osvariant}.x86_64.tar.xz" | \
+          tar -xz -C "${download_dir}" --strip-components 1 -- "shellcheck-${INPUT_VERSION}/shellcheck"
 
-        tar -xf "${{ github.action_path }}/sc.tar.xz" -C "${{ github.action_path }}"
-        mv "${{ github.action_path }}/shellcheck-${INPUT_VERSION}/shellcheck" \
-          "${{ github.action_path }}/shellcheck"
+        echo "${download_dir}" >> "$GITHUB_PATH"
 
     - name: Display shellcheck version
       shell: bash
       run: |
-        "${{ github.action_path }}/shellcheck" --version
+        shellcheck --version
 
     - name: Set options
       shell: bash
@@ -204,13 +208,11 @@ runs:
             -print0)
 
         if [[ -n "${INPUT_CHECK_TOGETHER}" ]]; then
-          "${{ github.action_path }}/shellcheck" \
-            ${INPUT_SHELLCHECK_OPTIONS} \
+          shellcheck ${INPUT_SHELLCHECK_OPTIONS} \
             "${filepaths[@]}" || statuscode=$?
         else
           for file in "${filepaths[@]}"; do
-            "${{ github.action_path }}/shellcheck" \
-              ${INPUT_SHELLCHECK_OPTIONS} \
+            shellcheck ${INPUT_SHELLCHECK_OPTIONS} \
               "$file" || statuscode=$?
           done
         fi

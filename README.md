@@ -157,7 +157,7 @@ Shellcheck can print output in these formats: `checkstyle`, `diff`, `gcc`, `json
 
 ## Run a specific version of Shellcheck
 
-If running the latest stable version of Shellcheck is not to your liking, you can specify a concrete version of Shellcheck to be used. When specifying a custom version, please use any of the released versions listed in the [Shellcheck repository](https://github.com/koalaman/shellcheck/tags).
+If downloading the latest stable version of Shellcheck on each run is not to your liking, you can specify a concrete version of Shellcheck to be used, or skip downloading altogether in favor of pre-installed shellcheck in GitHub-hosted runners. When specifying a concrete version, please use any of the released versions listed in the [Shellcheck repository](https://github.com/koalaman/shellcheck/tags).
 
 ```yaml
    ...
@@ -166,3 +166,5 @@ If running the latest stable version of Shellcheck is not to your liking, you ca
      with:
        version: v0.9.0
 ```
+
+To skip downloading shellcheck, use the special value `version: system`. Note that the version of Shellcheck [present in GitHub Actions runner images](https://github.com/actions/runner-images) might be behind the latest released version of Shellcheck.
