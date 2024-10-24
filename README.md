@@ -142,10 +142,11 @@ If you need to scan for unusual files, you can use the `additional_files` key.
 
 ## Change output format
 
-Shellcheck can print output in these formats: `checkstyle`, `diff`, `gcc`, `json`, `json1`, `quiet`, `tty`. See some examples [here](https://github.com/koalaman/shellcheck/wiki/Integration#pick-the-output-format-that-makes-your-life-easier).
+Shellcheck can print output [in these formats](https://github.com/koalaman/shellcheck/wiki/Integration): `checkstyle`, `diff`, `gcc`, `json`, `json1`, `quiet`, `tty`. The special output format `actions` will reformat Shellcheck output to appear as _annotations_ in the GitHub UI.
 
-- `tty` has multi-line log messages
-- `gcc` has single-line log messages
+- `gcc` has single-line log messages (default)
+- `tty` has multi-line log messages and color output
+- `actions` integrates shellcheck errors into GitHub Pull Requests view
 
 ```yaml
    ...

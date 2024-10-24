@@ -37,7 +37,7 @@ inputs:
     default: "false"
     deprecationMessage: "There are no problem-matchers, this setting does not do anything."
   format:
-    description: "Output format (checkstyle, diff, gcc, json, json1, quiet, tty)"
+    description: "Output format (checkstyle, diff, gcc, json, json1, quiet, tty, actions)"
     required: false
     default: "gcc"
   version:
@@ -91,9 +91,15 @@ runs:
       run: |
         declare -a options
         if [[ -n "${INPUT_SEVERITY}" ]]; then
-          options+=("-S ${INPUT_SEVERITY}")
+          options+=(-S "${INPUT_SEVERITY}")
         fi
-        options+=("--format=${INPUT_FORMAT}")
+        if [ "${INPUT_FORMAT}" = "actions" ]; then
+          options+=(--format=json1)
+        elif [ "${INPUT_FORMAT}" = "tty" ]; then
+          options+=(--format=tty --color=always)
+        else
+          options+=(--format="${INPUT_FORMAT}")
+        fi
         echo "options=${options[@]}" >> $GITHUB_OUTPUT
 
     - name: Gather excluded paths
@@ -152,6 +158,7 @@ runs:
         INPUT_EXCLUDE_ARGS: ${{ steps.exclude.outputs.excludes }}
         INPUT_ADDITIONAL_FILE_ARGS: ${{ steps.additional.outputs.files }}
         INPUT_SHELLCHECK_OPTIONS: ${{ steps.options.outputs.options }}
+        INPUT_FORMAT: ${{ inputs.format }}
       run: |
         statuscode=0
         declare -a filepaths
@@ -203,15 +210,33 @@ runs:
             -type f ! -name '*.*' -perm /111 \
             -print0)
 
+        # Reformats shellcheck "json1" output as GitHub Actions workflow commands
+        reformat() {
+          if [ "${INPUT_FORMAT}" = "actions" ]; then
+            jq -r '
+              def workflow_command:
+                if . == "note" or . == "info" or . == "style"
+                then "notice"
+                else . # error, warning
+                end;
+              .comments[] |
+                "::\(.level | workflow_command) file=\(.file),line=\(.line),endLine=\(.endLine),col=\(.column),endColumn=\(.endColumn)::\(.message) [SC\(.code)]"
+            '
+          else
+            cat
+          fi
+        }
+
+        set -o pipefail
         if [[ -n "${INPUT_CHECK_TOGETHER}" ]]; then
           "${{ github.action_path }}/shellcheck" \
             ${INPUT_SHELLCHECK_OPTIONS} \
-            "${filepaths[@]}" || statuscode=$?
+            "${filepaths[@]}" | reformat || statuscode=$?
         else
           for file in "${filepaths[@]}"; do
             "${{ github.action_path }}/shellcheck" \
               ${INPUT_SHELLCHECK_OPTIONS} \
-              "$file" || statuscode=$?
+              "$file" | reformat || statuscode=$?
           done
         fi
 
