@@ -73,7 +73,7 @@ jobs:
       run: |
         expect="testfiles/scandir/unknown-shebang"
 
-        if [[ ! "${{ steps.two.outputs.files }}" =~ $expect ]];then
-          echo "::error:: Expected file $expect not found in ${{ steps.two.outputs.files }}"
+        if [[ ! "${{ steps.three.outputs.files }}" =~ $expect ]];then
+          echo "::error:: Expected file $expect not found in ${{ steps.three.outputs.files }}"
           exit 1
         fi
