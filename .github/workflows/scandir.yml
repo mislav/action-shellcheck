@@ -38,7 +38,7 @@ jobs:
         if [[ ! "${{ steps.one.outputs.files }}" =~ $expect1 ]];then
           echo "::error:: Expected file $expect1 not found in ${{ steps.one.outputs.files }}"
           exit 1
-        if [[ ! "${{ steps.one.outputs.files }}" =~ $expect2 ]];then
+        elif [[ ! "${{ steps.one.outputs.files }}" =~ $expect2 ]];then
           echo "::error:: Expected file $expect2 not found in ${{ steps.one.outputs.files }}"
           exit 1
         elif [[ "${{ steps.one.outputs.files }}" =~ $notexpect ]];then
